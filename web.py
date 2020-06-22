@@ -217,7 +217,7 @@ class Network(nx.DiGraph):
             temp_net = self.copy()
             temp_net.remove_nodes_from(basals)
             
-            print basals
+            print(basals)
             
             for n in temp_net.nodes():
                 if temp_net.in_degree(n) == 0:
@@ -307,28 +307,28 @@ class Network(nx.DiGraph):
         
         has_loops = False
         if self.number_of_selfloops() > 0:
-            loops = self.selfloop_edges(data=True)
+            loops = nx.selfloop_edges(self, data=True)
             self.remove_edges_from(loops)
             has_loops = True
         
-	#updated to fix conflict between networkx versions
-	# nx1.7 returns cycles as list, nx1.9 returns a generator
-	if nx.__version__=='1.7': 
+        #updated to fix conflict between networkx versions
+        # nx1.7 returns cycles as list, nx1.9 returns a generator
+        if nx.__version__=='1.7': 
             cycles = nx.algorithms.cycles.simple_cycles(self)
-	else:
-	    cycles = list(nx.algorithms.cycles.simple_cycles(self))
 
-        nodes_in_cycles = set()
-        number = len(cycles)
-        if number > 0:
-            for c in cycles:
-                nodes_in_cycles |= set(c) 
+        else:
+            cycles = list(nx.algorithms.cycles.simple_cycles(self))
+            nodes_in_cycles = set()
+            number = len(cycles)
+            if number > 0:
+                for c in cycles:
+                    nodes_in_cycles |= set(c) 
+                    
+                fraction = float(len(nodes_in_cycles))/float(self.number_of_nodes())
+            
+            if has_loops:
+                self.add_edges_from(loops)
                 
-            fraction = float(len(nodes_in_cycles))/float(self.number_of_nodes())
-        
-        if has_loops:
-            self.add_edges_from(loops)
-             
         return fraction, number  
         
     def longest_path_length(self, draw_path=False):
@@ -352,82 +352,83 @@ class Network(nx.DiGraph):
         
         has_loops = False
         if self.number_of_selfloops() > 0:
-            loops = self.selfloop_edges(data=True)
+            loops = nx.selfloop_edges(self, data=True)
             self.remove_edges_from(loops)
             has_loops = True
         
         has_cycles = False
-	#updated to fix conflict between networkx versions
-	# nx1.7 returns cycles as list, nx1.9 returns a generator
-	if nx.__version__=='1.7': 
-            cycles = nx.algorithms.cycles.simple_cycles(self)
-	else:
-	    cycles = list(nx.algorithms.cycles.simple_cycles(self))
 
-        if len(cycles) > 0:
-            has_cycles = True
-            removed_edges_cycles = []
-            for c in cycles:
-                removed_edges_cycles.append((c[0], c[1]))
+        #updated to fix conflict between networkx versions
+        # nx1.7 returns cycles as list, nx1.9 returns a generator
+        if nx.__version__=='1.7': 
+                cycles = nx.algorithms.cycles.simple_cycles(self)
+        else:
+            cycles = list(nx.algorithms.cycles.simple_cycles(self))
+
+            if len(cycles) > 0:
+                has_cycles = True
+                removed_edges_cycles = []
+                for c in cycles:
+                    removed_edges_cycles.append((c[0], c[1]))
+                    
+                self.remove_edges_from(removed_edges_cycles)
+            
+            #we make this structure an attribute of the class to be able to infer trophic levels
+            #based on the longest path to each node
+            self.length_to = dict.fromkeys(self.nodes(), 0)
+            longest_paths = dict.fromkeys(self.nodes())
+            
+            top_order_nodes = nx.topological_sort(self) 
+            for v in top_order_nodes:
+                for e in self.out_edges(v):
+                    if self.length_to[e[1]] <= self.length_to[e[0]] + 1:
+                        self.length_to[e[1]] = self.length_to[e[0]] + 1
+                        longest_paths[e[1]] = e
+            
+            max_d = max(self.length_to.values())
+            
+            #from here on we calculate how many longest paths there are and we trace back one of them
+            #to draw it as a network
+            if draw_path:
+                qty = 0
+                for k in self.length_to.keys():
+                    if self.length_to[k] == max_d:
+                        n = k
+                        qty += 1
                 
-            self.remove_edges_from(removed_edges_cycles)
-        
-        #we make this structure an attribute of the class to be able to infer trophic levels
-        #based on the longest path to each node
-        self.length_to = dict.fromkeys(self.nodes(), 0)
-        longest_paths = dict.fromkeys(self.nodes())
-        
-        top_order_nodes = nx.topological_sort(self) 
-        for v in top_order_nodes:
-            for e in self.out_edges(v):
-                if self.length_to[e[1]] <= self.length_to[e[0]] + 1:
-                    self.length_to[e[1]] = self.length_to[e[0]] + 1
-                    longest_paths[e[1]] = e
-        
-        max_d = max(self.length_to.values())
-        
-        #from here on we calculate how many longest paths there are and we trace back one of them
-        #to draw it as a network
-        if draw_path:
-            qty = 0
-            for k in self.length_to.keys():
-                if self.length_to[k] == max_d:
-                    n = k
-                    qty += 1
+                print('there are', qty, 'paths of length =', max_d)
+                
+                longest_path = []
+                longest_path.append(longest_paths[n])
+                next = longest_paths[n][0]
+                fin = False
+                while not fin:
+                    if self.length_to[next] == 0:
+                        fin = True
+                        break
+                    longest_path.append(longest_paths[next])
+                    next = longest_paths[next][0]
+                
+                print(longest_path)
+                
+                longest_path_net = nx.DiGraph()
+                longest_path_net.add_edges_from(longest_path)
+                
+                layout = nx.graphviz_layout(longest_path_net, prog="dot", args='-Gnodesep=.07, -Granksep=.1, -Grankdir=BT')
+                #layout = nx.spring_layout(net)
+                
+                #fig = plt.figure()
+                #network_plot = fig.add_subplot(111)
+                #nx.draw_networkx(longest_path_net, layout, ax=network_plot)    
+                
             
-            print 'there are', qty, 'paths of length =', max_d 
+            if has_loops:
+                self.add_edges_from(loops)
             
-            longest_path = []
-            longest_path.append(longest_paths[n])
-            next = longest_paths[n][0]
-            fin = False
-            while not fin:
-                if self.length_to[next] == 0:
-                    fin = True
-                    break
-                longest_path.append(longest_paths[next])
-                next = longest_paths[next][0]
+            if has_cycles:
+                self.add_edges_from(removed_edges_cycles)
             
-            print longest_path
-            
-            longest_path_net = nx.DiGraph()
-            longest_path_net.add_edges_from(longest_path)
-            
-            layout = nx.graphviz_layout(longest_path_net, prog="dot", args='-Gnodesep=.07, -Granksep=.1, -Grankdir=BT')
-            #layout = nx.spring_layout(net)
-            
-            #fig = plt.figure()
-            #network_plot = fig.add_subplot(111)
-            #nx.draw_networkx(longest_path_net, layout, ax=network_plot)    
-            
-        
-        if has_loops:
-            self.add_edges_from(loops)
-        
-        if has_cycles:
-            self.add_edges_from(removed_edges_cycles)
-        
-        return max_d
+            return max_d
     
     def mean_path_length(self):
         """
@@ -604,7 +605,7 @@ class Network(nx.DiGraph):
         #we remove the self loops in nodes in order to prevent infinite recursion
         has_loops = False
         if self.number_of_selfloops() > 0:
-            loops = self.selfloop_edges(data=True)
+            loops = nx.selfloop_edges(self, data=True)
             self.remove_edges_from(loops)
             has_loops = True
         
@@ -614,96 +615,96 @@ class Network(nx.DiGraph):
         #if there are cycles we have to break them before the topological sort
         has_cycles = False
 
-	#updated to fix conflict between networkx versions
-	# nx1.7 returns cycles as list, nx1.9 returns a generator
-	if nx.__version__=='1.7': 
-            cycles = nx.algorithms.cycles.simple_cycles(self)
-	else:
-	    cycles = list(nx.algorithms.cycles.simple_cycles(self))
+        #updated to fix conflict between networkx versions
+        # nx1.7 returns cycles as list, nx1.9 returns a generator
+        if nx.__version__=='1.7': 
+                cycles = nx.algorithms.cycles.simple_cycles(self)
+        else:
+            cycles = list(nx.algorithms.cycles.simple_cycles(self))
 
-        if len(cycles) > 0:
-            has_cycles = True
-            removed_edges_cycles = []
-            for c in cycles:
-                removed_edges_cycles.append((c[0], c[1]))
-                
-            self.remove_edges_from(removed_edges_cycles)
-        
-        #obtain the topological order to make more efficient the calculation
-        top_order_nodes = nx.topological_sort(self) 
-        paths = dict()
-        
-        #we obtain the basal species, from which all the paths will be constructed
-        basals = set()
-        for n in self.nodes():
-            if self.in_degree(n) == 0 and self.out_degree(n) > 0:
-                basals.add(n)
-                trophic_positions[n] = 1.0
-                number_of_paths[n] = 0 
-                paths[n] = [[n]]
-        
-        #finding all the paths to all of the nodes from the base
-        for n in top_order_nodes:
-            if n in basals:
-                continue
-            paths[n] = []
-            
-            predecs = self.predecessors(n)
-            
-            for predecessor in predecs:
-                if len(paths[predecessor]) == 0:
-                    all_pred_paths = []
-                    for b in basals:
-                        pred_paths = self.find_all_paths(b,predecessor)
-                        all_pred_paths += pred_paths
-                    paths[predecessor] = all_pred_paths
+            if len(cycles) > 0:
+                has_cycles = True
+                removed_edges_cycles = []
+                for c in cycles:
+                    removed_edges_cycles.append((c[0], c[1]))
                     
-                pred_paths = paths[predecessor]
+                self.remove_edges_from(removed_edges_cycles)
+            
+            #obtain the topological order to make more efficient the calculation
+            top_order_nodes = nx.topological_sort(self) 
+            paths = dict()
+            
+            #we obtain the basal species, from which all the paths will be constructed
+            basals = set()
+            for n in self.nodes():
+                if self.in_degree(n) == 0 and self.out_degree(n) > 0:
+                    basals.add(n)
+                    trophic_positions[n] = 1.0
+                    number_of_paths[n] = 0 
+                    paths[n] = [[n]]
+            
+            #finding all the paths to all of the nodes from the base
+            for n in top_order_nodes:
+                if n in basals:
+                    continue
+                paths[n] = []
+                
+                predecs = self.predecessors(n)
+                
+                for predecessor in predecs:
+                    if len(paths[predecessor]) == 0:
+                        all_pred_paths = []
+                        for b in basals:
+                            pred_paths = self.find_all_paths(b,predecessor)
+                            all_pred_paths += pred_paths
+                        paths[predecessor] = all_pred_paths
+                        
+                    pred_paths = paths[predecessor]
+                        
+                    for p in pred_paths:
+                        p_new = p + [n]
+                        paths[n].append(p_new)
+            
+                mean_length = 0
+                number_of_paths[n] = len(paths[n])
+                if number_of_paths[n] == 0:
+                    trophic_positions[n] = 0
+                    continue
                     
-                for p in pred_paths:
-                    p_new = p + [n]
-                    paths[n].append(p_new)
-        
-            mean_length = 0
-            number_of_paths[n] = len(paths[n])
-            if number_of_paths[n] == 0:
-                trophic_positions[n] = 0
-                continue
+                for path in paths[n]:
+                    mean_length += len(path)-1
+                    
+                overall_mean_length += mean_length
+                overall_number_of_paths += number_of_paths[n]
                 
-            for path in paths[n]:
-                mean_length += len(path)-1
+                trophic_positions[n] = (float(mean_length)/float(number_of_paths[n])) + 1
                 
-            overall_mean_length += mean_length
-            overall_number_of_paths += number_of_paths[n]
+            if overall_number_of_paths == 0:
+                overall_mean_length = 0
+            else:
+                overall_mean_length = float(overall_mean_length)/float(overall_number_of_paths)
             
-            trophic_positions[n] = (float(mean_length)/float(number_of_paths[n])) + 1
+            self.total_number_paths = overall_number_of_paths
             
-        if overall_number_of_paths == 0:
-            overall_mean_length = 0
-        else:
-            overall_mean_length = float(overall_mean_length)/float(overall_number_of_paths)
-        
-        self.total_number_paths = overall_number_of_paths
-        
-        for sp in paths.keys():
-            if sp in basals:
-                continue
-            for path in paths[sp]:
-                self.path_length_variance += ((len(path)-1) - overall_mean_length)**2
-        
-        if self.total_number_paths == 0:
-            self.path_length_variance = 0.0
-        else:
-            self.path_length_variance = self.path_length_variance/self.total_number_paths
-        self.path_length_sd = math.sqrt(self.path_length_variance)
-        
-        if has_loops:
-            self.add_edges_from(loops)
-        
-        if has_cycles:
-            self.add_edges_from(removed_edges_cycles)
-        
-        return trophic_positions, number_of_paths, overall_mean_length
+            for sp in paths.keys():
+                if sp in basals:
+                    continue
+                for path in paths[sp]:
+                    self.path_length_variance += ((len(path)-1) - overall_mean_length)**2
+            
+            if self.total_number_paths == 0:
+                self.path_length_variance = 0.0
+            else:
+                self.path_length_variance = self.path_length_variance/self.total_number_paths
+            self.path_length_sd = math.sqrt(self.path_length_variance)
+            
+            if has_loops:
+                self.add_edges_from(loops)
+            
+            if has_cycles:
+                self.add_edges_from(removed_edges_cycles)
+            
+            return trophic_positions, number_of_paths, overall_mean_length
 
     def get_path_length_feats(self):
         if self.total_number_paths == 0:
@@ -1015,7 +1016,7 @@ class Network(nx.DiGraph):
         
         for f in ratios:
             net_temp = self.copy()
-            net_temp.remove_edges_from(net_temp.selfloop_edges(data=True))
+            net_temp.remove_edges_from(nx.selfloop_edges(net_temp, data=True))
             net_temp.obtain_interactions_strengths()
             
             to_remove = math.ceil(float(self.order())*(float(f)/100))
@@ -1023,7 +1024,7 @@ class Network(nx.DiGraph):
             total_loss = 0
             original_n = self.order()
             
-            for i in xrange(0,len(order)):        
+            for i in range(0,len(order)):        
                 if total_loss >= (original_n - 1):
                     break
                 
@@ -1127,7 +1128,7 @@ class Network(nx.DiGraph):
         
         if cumulative:
             net_temp = self.copy()
-            net_temp.remove_edges_from(net_temp.selfloop_edges(data=True))
+            net_temp.remove_edges_from(nx.selfloop_edges(net_temp, data=True))
             to_remove = math.ceil(float(self.order())*(float(interval)/100))
             removed = 0
             total_removed = 0
@@ -1135,7 +1136,7 @@ class Network(nx.DiGraph):
             fraction_removed = interval
             original_n = self.order()
             
-            for i in xrange(0,len(order)):
+            for i in range(0,len(order)):
                 if total_loss >= (original_n - 1):
                     break
                 
@@ -1180,13 +1181,13 @@ class Network(nx.DiGraph):
             
             for f in ratios:
                 net_temp = self.copy()
-                net_temp.remove_edges_from(net_temp.selfloop_edges(data=True))
+                net_temp.remove_edges_from(nx.selfloop_edges(net_temp, data=True))
                 to_remove = math.ceil(float(self.order())*(float(f)/100))
                 removed = 0
                 total_loss = 0
                 original_n = self.order()
                 
-                for i in xrange(0,len(order)):        
+                for i in range(0,len(order)):        
                     if total_loss >= (original_n - 1):
                         break
                     
@@ -1690,7 +1691,7 @@ class Network(nx.DiGraph):
             return False
         
         if number_of_preds > 0 and new_net.in_degree(invasive_name) == 0:
-            print 'invasive species has no prey'
+            print('invasive species has no prey')
             message = str('invasive species has no prey')
             raise NotInvadableNetwork(message, None)
             return False
@@ -1887,9 +1888,9 @@ class Network(nx.DiGraph):
         try:
             retcode = subprocess.call(['netcarto_cl'], stdout=file_out, stderr=subprocess.STDOUT)
         except OSError:
-            print 'Netcarto is not installed or is not available on the PATH in this computer.'
-            print 'Cannot obtain the modularity using the rgraph library.'
-            print 'Check your rgraph installation.'
+            print ('Netcarto is not installed or is not available on the PATH in this computer.')
+            print ('Cannot obtain the modularity using the rgraph library.')
+            print ('Check your rgraph installation.')
             return 0.0, 0
         
         dict_nodes_numbers = dict()
@@ -2038,8 +2039,8 @@ class Network(nx.DiGraph):
     def get_trophic_levels(self):
         
         has_loops = False
-        if self.number_of_selfloops() > 0:
-            loops = self.selfloop_edges(data=True)
+        if nx.number_of_selfloops(self) > 0:
+            loops = nx.selfloop_edges(self, data=True)
             self.remove_edges_from(loops)
             has_loops = True
 
@@ -2148,7 +2149,7 @@ class Network(nx.DiGraph):
             
             biomass = True
         
-        for i in xrange(len(nodes)):
+        for i in range(len(nodes)):
             nodes_dict[nodes[i]] = i
             
             if biomass:

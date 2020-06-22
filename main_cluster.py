@@ -93,7 +93,7 @@ if __name__ == '__main__':
         graph = nx.read_graphml(network_file)
         net = Network(graph)
         
-        print 'connectance = ', net.connectance()
+        print ('connectance = ', net.connectance())
         
         tls = net.get_trophic_levels()
         
@@ -103,7 +103,7 @@ if __name__ == '__main__':
             if u in basal_sps and v in top_preds and tls[v] == 3:
                 net.remove_edge(u,v)
                 
-        print 'new connectance = ', net.connectance()
+        print ('new connectance = ', net.connectance())
     else:
         net = obtain_interactions_network()
         net_to_save = net.copy()
@@ -133,7 +133,7 @@ if __name__ == '__main__':
     threshold_iter = math.ceil(ITERATIONS - (ITERATIONS*ITERATIONS_TO_RECORD))
     
     for i in range(1, ITERATIONS+1):
-        print i
+        print (i)
         ecosystem.update_world()
         #ecosystem.draw_species_distribution()
         
@@ -211,7 +211,7 @@ if __name__ == '__main__':
             write_spatial_state(ecosystem,i, output_dir)
             stop = datetime.now()
             elapsed = stop-start
-            print elapsed
+            print (elapsed)
         
     file_net.close()
     file_eco.close()
@@ -322,6 +322,6 @@ if __name__ == '__main__':
     
     stop_sim = datetime.now()
     elapsed_sim = stop_sim-start_sim
-    print 'time for simulation' , elapsed_sim    
+    print ('time for simulation' , elapsed_sim)    
     
     

@@ -72,26 +72,26 @@ class NetworkCreator():
         current_predators = 0    
         while self.net.size() == 0 or not nx.is_connected(self.net.to_undirected()) or current_herbivores < herbivores or current_producers < producers or current_predators < predators: #or max(self.net.get_shortest_chain_length().values()) < 3:
             self.net.clear()
-#            self.invaders = []
+#           self.invaders = []
             
             basal = None
             smallest_n = None
             
             #here we obtain the fundamental niche values for each one of the species in the network
             # n, c, r
-            for i in xrange(1,S+1):
+            for i in range(1,S+1):
                 self.net.add_node(i)
-                self.net.node[i]['n'] = float(ns[i-1]) #self.rnd_uniform.rvs()
-                self.net.node[i]['r'] = self.beta_dist.rvs() * self.net.node[i]['n']
-                self.net.node[i]['c'] = self.rnd.uniform((self.net.node[i]['r']/2), min(self.net.node[i]['n'], (1-(self.net.node[i]['r']/2))))
+                self.net.nodes[i]['n'] = float(ns[i-1]) #self.rnd_uniform.rvs()
+                self.net.nodes[i]['r'] = self.beta_dist.rvs() * self.net.nodes[i]['n']
+                self.net.nodes[i]['c'] = self.rnd.uniform((self.net.nodes[i]['r']/2), min(self.net.nodes[i]['n'], (1-(self.net.nodes[i]['r']/2))))
                 #the original value of c (commented bit) as originally presented in the Nature 2000 paper
                 #was changed after reading the niche model specification presented in the JAE 2008 paper
                 #the new specification ensures that the r of all the species always lie within the niche interval [0,1]
                 #self.net.node[i]['c'] = self.rnd.uniform(self.net.node[i]['r']/2, self.net.node[i]['n'])
-                self.net.node[i]['invader'] = False
+                self.net.nodes[i]['invader'] = False
                 
-                if smallest_n == None or self.net.node[i]['n'] < smallest_n:
-                    smallest_n = self.net.node[i]['n']
+                if smallest_n == None or self.net.nodes[i]['n'] < smallest_n:
+                    smallest_n = self.net.nodes[i]['n']
                     basal = i
             
             #if INVASION:
@@ -110,7 +110,7 @@ class NetworkCreator():
                 
 #                self.invaders.append(invader)
                           
-            self.net.node[basal]['r'] = 0.0    
+            self.net.nodes[basal]['r'] = 0.0    
             self._create_links_based_on_fundamental_niche()
             
             current_herbivores = 0
@@ -135,21 +135,21 @@ class NetworkCreator():
             nodes_to_link = set(self.net.nodes())
         
         for i in self.net.nodes():
-            if self.net.node[i]['r'] == 0.0:
+            if self.net.nodes[i]['r'] == 0.0:
                 continue
             
-            r_lower_bound = self.net.node[i]['c'] - (self.net.node[i]['r']/2)
-            r_upper_bound = self.net.node[i]['c'] + (self.net.node[i]['r']/2) 
+            r_lower_bound = self.net.nodes[i]['c'] - (self.net.nodes[i]['r']/2)
+            r_upper_bound = self.net.nodes[i]['c'] + (self.net.nodes[i]['r']/2) 
             for j in self.net.nodes():
                 if i not in nodes_to_link and j not in nodes_to_link:
                     continue
                 
-                if self.net.node[j]['n'] >= r_lower_bound and self.net.node[j]['n'] <= r_upper_bound:  
+                if self.net.nodes[j]['n'] >= r_lower_bound and self.net.nodes[j]['n'] <= r_upper_bound:  
                     self.net.add_edge(j,i)
         
         #for disconnected or duplicated nodes
         disc_nodes = set()        
-        self_loops = set(self.net.selfloop_edges())
+        self_loops = set(nx.selfloop_edges(self.net))
         
         for i in nodes_to_link:
             disconnected = False
@@ -162,7 +162,7 @@ class NetworkCreator():
                     self.net.remove_edge(i,i)
                 else:
                     disconnected = True
-                    attrs = self.net.node[i]
+                    attrs = self.net.nodes[i]
                     self.net.remove_node(i)
                     self.net.add_node(i, attr_dict=attrs)
             else:
@@ -174,17 +174,17 @@ class NetworkCreator():
                     
                     if i_succs == j_succs and i_predecs == j_predecs:
                         disconnected = True
-                        attrs = self.net.node[i]
+                        attrs = self.net.nodes[i]
                         self.net.remove_node(i)
                         self.net.add_node(i, attr_dict=attrs)
-                        print 'duplicated node'
+                        print('duplicated node')
                         break
                     
             #we reassign the fundamental niche values to nodes that are disconnected or duplicated        
             if disconnected:
-                self.net.node[i]['n'] = self.rnd_uniform.rvs()
-                self.net.node[i]['r'] = self.beta_dist.rvs() * self.net.node[i]['n']
-                self.net.node[i]['c'] = self.rnd.uniform(self.net.node[i]['r']/2, self.net.node[i]['n'])
+                self.net.nodes[i]['n'] = self.rnd_uniform.rvs()
+                self.net.nodes[i]['r'] = self.beta_dist.rvs() * self.net.nodes[i]['n']
+                self.net.nodes[i]['c'] = self.rnd.uniform(self.net.nodes[i]['r']/2, self.net.nodes[i]['n'])
                 disc_nodes.add(i)
                 
         
@@ -250,12 +250,12 @@ def obtain_interactions_network():
 #                    if tls[n] == 1:
 #                        herbs.add(n)
         
-        print 'about to obtain combinations'
+        print ('about to obtain combinations')
         
         n_mutualists = int(math.ceil(len(herbs)*MUTUALISM))
         #muts_sets = set(itertools.combinations(herbs, n_mutualists))
         
-        print 'already obtained combinations'
+        print ('already obtained combinations')
         
         #mut_set = muts_sets.pop()
         
@@ -273,26 +273,26 @@ def obtain_interactions_network():
         mut_set = set()
     
     ##here, we eliminate cannibalistic loops on herbivore nodes
-    self_loops = set(net.selfloop_edges())
-    print self_loops
+    self_loops = set(nx.selfloop_edges(net))
+    print (self_loops)
     for h in herbs:
         if (h,h) in self_loops:
             net.remove_edge(h,h)
     
     
-    print 'herbs', herbs
-    print 'muts', mut_set
-    print 'mut_prods', mut_prod_set       
+    print ('herbs', herbs)
+    print ('muts', mut_set)
+    print ('mut_prods', mut_prod_set)   
     for n in net.nodes():
         if n in mut_prod_set:
-            net.node[n]['mut_prod'] = True
+            net.nodes[n]['mut_prod'] = True
         else:
-            net.node[n]['mut_prod'] = False
+            net.nodes[n]['mut_prod'] = False
         
         if n in mut_set:
-            net.node[n]['mut'] = True
+            net.nodes[n]['mut'] = True
         else:
-            net.node[n]['mut'] = False
+            net.nodes[n]['mut'] = False
             
     return net
     
@@ -325,7 +325,7 @@ def obtain_interactions_network_with_nestedness():
         for inv_id in candidates:
             net_c = net.copy()
             net_c.remove_node(inv_id)
-            net_c.remove_edges_from(net_c.selfloop_edges())
+            net_c.remove_edges_from(nx.selfloop_edges(net_c))
             
             if 0 in net_c.degree().values():
                 continue
@@ -335,12 +335,12 @@ def obtain_interactions_network_with_nestedness():
                     invaders += 1
                     invader_found = True
                     net_temp.remove_node(inv_id)
-                    print 'invader =', inv_id
-                    print 'trophic level:', tls[inv_id]
+                    print ('invader =', inv_id)
+                    print ('trophic level:', tls[inv_id])
                     break
         
         if not invader_found:
-            print 'could not find a suitable invader from trophic level:', current_tl
+            print ('could not find a suitable invader from trophic level:', current_tl)
                 
         if len(temp_tl) == 0:
             temp_tl = trophic_ls.copy()
@@ -386,8 +386,8 @@ def obtain_interactions_network_with_nestedness():
     
             #nodf = utls.calculate_nodf(ordered_matrix)
             if nodf >= MIN_NESTEDNESS and nodf <= MAX_NESTEDNESS:
-                print 'final nestedness = ', nodf
-                print 'max nestedness = ', max_nodf
+                print ('final nestedness = ', nodf)
+                print ('max nestedness = ', max_nodf)
                 break
             else:
                 nc.reset_state()
@@ -417,7 +417,7 @@ def obtain_interactions_network_with_nestedness():
                     for inv_id in candidates:
                         net_c = net.copy()
                         net_c.remove_node(inv_id)
-                        net_c.remove_edges_from(net_c.selfloop_edges())
+                        net_c.remove_edges_from(nx.selfloop_edges(net_c))
                         
                         if 0 in net_c.degree().values():
                             continue
@@ -427,12 +427,12 @@ def obtain_interactions_network_with_nestedness():
                                 invaders += 1
                                 invader_found = True
                                 net_temp.remove_node(inv_id)
-                                print 'invader =', inv_id
-                                print 'trophic level:', tls[inv_id]
+                                print ('invader =', inv_id)
+                                print ('trophic level:', tls[inv_id])
                                 break
                     
                     if not invader_found:
-                        print 'could not find a suitable invader from trophic level:', current_tl
+                        print ('could not find a suitable invader from trophic level:', current_tl)
                             
                     if len(temp_tl) == 0:
                         temp_tl = trophic_ls.copy()
@@ -441,13 +441,13 @@ def obtain_interactions_network_with_nestedness():
         prods = set()
         herbs = set()
     
-    print 'connectance = ', net.connectance()
-    print 'fraction of nodes in loops and number of cycles = ', net.fraction_in_loops()        
+    print ('connectance = ', net.connectance())
+    print ('fraction of nodes in loops and number of cycles = ', net.fraction_in_loops())     
 
 
     ##here, we eliminate cannibalistic loops on herbivore nodes
     herbivores = sps_in_tls[1]
-    self_loops = set(net.selfloop_edges())
+    self_loops = set(nx.selfloop_edges(net))
     for h in herbivores:
         if (h,h) in self_loops:
             net.remove_edge(h,h)
@@ -478,7 +478,7 @@ def get_mutualistic_matrix(net):
     producers = set()
 
     loops = False
-    loop_edges = net.selfloop_edges()
+    loop_edges = nx.selfloop_edges(net)
     if len(loop_edges) > 0:
         net.remove_edges_from(loop_edges)
         loops = True
@@ -487,7 +487,7 @@ def get_mutualistic_matrix(net):
         if net.in_degree(n) == 0:
             producers.add(n)
     
-    print producers  
+    print (producers)
     
     for n in net.nodes():
         if n not in producers:
@@ -511,7 +511,7 @@ def get_mutualistic_matrix(net):
     prods.sort()
     herbs = sorted(herbivores)
    
-    print herbs
+    print (herbs)
     
     mutualistic_matrix = []
     producers_edges = net.edges(producers)

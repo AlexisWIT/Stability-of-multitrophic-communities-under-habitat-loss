@@ -9,7 +9,7 @@ OCCUPIED_CELLS = 0.4
 
 REFRESH_RATE = 1
 
-SPECIES = 60
+SPECIES = 5
 
 CONNECTANCE = 0.08
 
@@ -55,7 +55,7 @@ MIN_NESTEDNESS = 0.0
 MAX_NESTEDNESS = 0.0
 
 #fraction of herbivores that are mutualists
-#MUTUALISM = 0.1
+MUTUALISM = 0.1
 
 #minimum number of mutualists (in case number of herbivores is less than
 #1/MUTUALISM number of mutualists desired)
@@ -151,7 +151,7 @@ HABITAT_LOSS_ITER = 1000
 HABITAT_LOSS_TYPE = 3 #1
 
 #fraction of habitat that will become lost, which will produce habitat loss and fragmentation
-#LOST_HABITAT = 0.5
+LOST_HABITAT = 0.5
 
 #whether to apply an invasion event
 INVASION = False

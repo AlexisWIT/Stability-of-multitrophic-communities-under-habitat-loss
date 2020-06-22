@@ -87,7 +87,7 @@ class Individual():
 #            if prey.mutualist:
 #                print 'a mutualist has been eaten'
             if self.mutualist:
-                print 'I am a mutualist predator', self.species_id
+                print ('I am a mutualist predator', self.species_id)
             
             #print 'predation'
             
@@ -119,8 +119,8 @@ class Individual():
         self.resource += synthesised_resource
         
         if self.mutualist:
-            print 'I am an autotroph mutualist'
-            print 'species id', self.species_id
+            print ('I am an autotroph mutualist')
+            print ('species id', self.species_id)
         
         if self.resource > MAX_RESOURCE:
             self.resource = MAX_RESOURCE

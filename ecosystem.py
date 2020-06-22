@@ -15,6 +15,7 @@ from math import floor, log
 from copy import copy
 import types
 import threading
+import functools
 
 #from pylab import *
 import math
@@ -49,13 +50,13 @@ class Ecosystem():
         self.mutualistic_producers = set()
         self.potential_invaders = []
         for n in network.nodes(data=True):
-            if network.node[n[0]]['invader']:
+            if network.nodes[n[0]]['invader']:
                 self.potential_invaders.append(n)
                 network.remove_node(n[0])
             else:
-                if network.node[n[0]]['mut']:
+                if network.nodes[n[0]]['mut']:
                     self.mutualists.add(n[0])
-                if network.node[n[0]]['mut_prod']:
+                if network.nodes[n[0]]['mut_prod']:
                     self.mutualistic_producers.add(n[0])
             
         self.net = network
@@ -158,7 +159,7 @@ class Ecosystem():
                         if prod_sp_id in self.mutualistic_producers:
                             ind_prod.become_mutualistic_producer()
                         new_cell.inhabitant = ind_prod
-                        new_cell.habitat = self.rnd.choice(sorted(self.net.node[prod_sp_id]['habitats']))
+                        new_cell.habitat = self.rnd.choice(sorted(self.net.nodes[prod_sp_id]['habitats']))
                         dist_row.append(-1)
                     
                     row.append(new_cell)
@@ -294,164 +295,163 @@ class Ecosystem():
                     self.world[x_coord][y_coord].habitat = h
                     cell_count += 1
     
-#this piece of code shows a plot displaying the initial arrangement of habitats
-#in the ecosystem after initialising it using the algorithm above    
-#        Z = []
-#        for i in range(ROWS):
-#            row = []
-#            for j in range(COLUMNS):
-#                if self.world[i][j].habitat == None:
-#                    print 'This cell does not have habitat', i, j 
-#                row.append(self.world[i][j].habitat)
-#            Z.append(array(row))
-#        
-#        z = array(Z)
-#
-#        new_fig = figure()
-#        new_plot = new_fig.add_subplot(111)
-#        new_plot.pcolor(z, edgecolors='k', linewidths=1)
-#        draw()
-        
-        #show()
+    #this piece of code shows a plot displaying the initial arrangement of habitats
+    #in the ecosystem after initialising it using the algorithm above    
+    #        Z = []
+    #        for i in range(ROWS):
+    #            row = []
+    #            for j in range(COLUMNS):
+    #                if self.world[i][j].habitat == None:
+    #                    print 'This cell does not have habitat', i, j 
+    #                row.append(self.world[i][j].habitat)
+    #            Z.append(array(row))
+    #        
+    #        z = array(Z)
+    #
+    #        new_fig = figure()
+    #        new_plot = new_fig.add_subplot(111)
+    #        new_plot.pcolor(z, edgecolors='k', linewidths=1)
+    #        draw()
+            
+            #show()
     
     
     def apply_habitat_loss(self, type=HABITAT_LOSS_TYPE):
+        cells_to_loose = floor((ROWS*COLUMNS)*LOST_HABITAT)
+        lost_habitat = 0
         
-	cells_to_loose = floor((ROWS*COLUMNS)*LOST_HABITAT)
-	lost_habitat = 0
-	
-	if type==1:
+        if type==1:
 
-		x_coord = self.rnd.randint(0,ROWS-1)
-		y_coord = self.rnd.randint(0,COLUMNS-1)
-		    
-		while not self.world[x_coord][y_coord].habitat in self.occupied_habitats:
-		    x_coord = self.rnd.randint(0,ROWS-1)
-		    y_coord = self.rnd.randint(0,COLUMNS-1)
-		
-		self.world[x_coord][y_coord].habitat = lost_habitat
-		self.world[x_coord][y_coord].inhabitant = None
-		self.world[x_coord][y_coord].visitor = None
-		    
-		cells_lost = 1
-		x_count = 1
-		y_count = 0
-		
-		x_next = 1
-		y_next = 1
-		
-		x_offset = -1
-		y_offset = 1
-		while cells_lost < cells_to_loose:
-		    if x_count > 0:
-		        x_coord = (x_coord+x_offset)%ROWS
-		        x_count -= 1
-		        
-		        if x_count == 0:
-		            x_next += 1
-		            if x_offset == 1:
-		                x_offset = -1
-		            elif x_offset == -1:
-		                x_offset = 1
-		            
-		            y_count = y_next
-		            
-		    elif y_count > 0:                
-		        y_coord = (y_coord+y_offset)%COLUMNS
-		        y_count -= 1
-		        
-		        if y_count == 0:
-		            y_next += 1
-		            if y_offset == 1:
-		                y_offset = -1
-		            elif y_offset == -1:
-		                y_offset = 1
-		            
-		            x_count = x_next
-		    
-		    self.world[x_coord][y_coord].habitat = lost_habitat
-		    self.world[x_coord][y_coord].inhabitant = None
-		    self.world[x_coord][y_coord].visitor = None
-		    cells_lost += 1
+            x_coord = self.rnd.randint(0,ROWS-1)
+            y_coord = self.rnd.randint(0,COLUMNS-1)
+                
+            while not self.world[x_coord][y_coord].habitat in self.occupied_habitats:
+                x_coord = self.rnd.randint(0,ROWS-1)
+                y_coord = self.rnd.randint(0,COLUMNS-1)
+            
+            self.world[x_coord][y_coord].habitat = lost_habitat
+            self.world[x_coord][y_coord].inhabitant = None
+            self.world[x_coord][y_coord].visitor = None
+                
+            cells_lost = 1
+            x_count = 1
+            y_count = 0
+            
+            x_next = 1
+            y_next = 1
+            
+            x_offset = -1
+            y_offset = 1
+            while cells_lost < cells_to_loose:
+                if x_count > 0:
+                    x_coord = (x_coord+x_offset)%ROWS
+                    x_count -= 1
+                    
+                    if x_count == 0:
+                        x_next += 1
+                        if x_offset == 1:
+                            x_offset = -1
+                        elif x_offset == -1:
+                            x_offset = 1
+                        
+                        y_count = y_next
+                        
+                elif y_count > 0:                
+                    y_coord = (y_coord+y_offset)%COLUMNS
+                    y_count -= 1
+                    
+                    if y_count == 0:
+                        y_next += 1
+                        if y_offset == 1:
+                            y_offset = -1
+                        elif y_offset == -1:
+                            y_offset = 1
+                        
+                        x_count = x_next
+                
+                self.world[x_coord][y_coord].habitat = lost_habitat
+                self.world[x_coord][y_coord].inhabitant = None
+                self.world[x_coord][y_coord].visitor = None
+                cells_lost += 1
 
-	if type==2:
+        if type==2:
 
-		cells_lost = 0
-		#cells_deleted = []
-		while cells_lost < cells_to_loose:
+            cells_lost = 0
+            #cells_deleted = []
+            while cells_lost < cells_to_loose:
 
-			x_coord = self.rnd.randint(0,ROWS-1)
-			y_coord = self.rnd.randint(0,COLUMNS-1)
-			    
-			while not self.world[x_coord][y_coord].habitat in self.occupied_habitats or self.world[x_coord][y_coord].habitat==lost_habitat:#(x_coord,y_coord) in cells_deleted:
-			    x_coord = self.rnd.randint(0,ROWS-1)
-			    y_coord = self.rnd.randint(0,COLUMNS-1)
-		
-			self.world[x_coord][y_coord].habitat = lost_habitat
-			self.world[x_coord][y_coord].inhabitant = None
-			self.world[x_coord][y_coord].visitor = None
+                x_coord = self.rnd.randint(0,ROWS-1)
+                y_coord = self.rnd.randint(0,COLUMNS-1)
+                    
+                while not self.world[x_coord][y_coord].habitat in self.occupied_habitats or self.world[x_coord][y_coord].habitat==lost_habitat:#(x_coord,y_coord) in cells_deleted:
+                    x_coord = self.rnd.randint(0,ROWS-1)
+                    y_coord = self.rnd.randint(0,COLUMNS-1)
+            
+                self.world[x_coord][y_coord].habitat = lost_habitat
+                self.world[x_coord][y_coord].inhabitant = None
+                self.world[x_coord][y_coord].visitor = None
 
-			cells_lost += 1
-			#cells_deleted.append((x_coord,y_coord))
-	if type==3:
+                cells_lost += 1
+                #cells_deleted.append((x_coord,y_coord))
+        if type==3:
 
-		cells_lost = 0
-		while cells_lost < cells_to_loose:
+            cells_lost = 0
+            while cells_lost < cells_to_loose:
 
-			x_coord = self.rnd.randint(0,ROWS-1)
-			y_coord = self.rnd.randint(0,COLUMNS-1)
-			    
-			while not self.world[x_coord][y_coord].habitat in self.occupied_habitats or self.world[x_coord][y_coord].habitat==lost_habitat:
-			    x_coord = self.rnd.randint(0,ROWS-1)
-			    y_coord = self.rnd.randint(0,COLUMNS-1)
-		
-			self.world[x_coord][y_coord].habitat = lost_habitat
-			self.world[x_coord][y_coord].inhabitant = None
-			self.world[x_coord][y_coord].visitor = None
+                x_coord = self.rnd.randint(0,ROWS-1)
+                y_coord = self.rnd.randint(0,COLUMNS-1)
+                    
+                while not self.world[x_coord][y_coord].habitat in self.occupied_habitats or self.world[x_coord][y_coord].habitat==lost_habitat:
+                    x_coord = self.rnd.randint(0,ROWS-1)
+                    y_coord = self.rnd.randint(0,COLUMNS-1)
+            
+                self.world[x_coord][y_coord].habitat = lost_habitat
+                self.world[x_coord][y_coord].inhabitant = None
+                self.world[x_coord][y_coord].visitor = None
 
-			cells_lost += 1
-			x_count = 1
-			y_count = 0
-		
-			x_next = 1
-			y_next = 1
-		
-			x_offset = -1
-			y_offset = 1
-			
-			while random.random() < P_HL_CORR and cells_lost < cells_to_loose:
-				## do contiguous:
-			
-			        if x_count > 0:
-		        		x_coord = (x_coord+x_offset)%ROWS
-				        x_count -= 1
-		        
-			    	    	if x_count == 0:
-				            x_next += 1
-		           		    if x_offset == 1:
-				                x_offset = -1
-				            elif x_offset == -1:
-				                x_offset = 1
-		            
-				            y_count = y_next
-		            
-			        elif y_count > 0:                
-		        		y_coord = (y_coord+y_offset)%COLUMNS
-				        y_count -= 1
-		        
-				        if y_count == 0:
-				            y_next += 1
-				            if y_offset == 1:
-				                y_offset = -1
-				            elif y_offset == -1:
-				                y_offset = 1
-		            
-				            x_count = x_next
-		    
-			        self.world[x_coord][y_coord].habitat = lost_habitat
-		    		self.world[x_coord][y_coord].inhabitant = None
-				self.world[x_coord][y_coord].visitor = None
-				cells_lost += 1
+                cells_lost += 1
+                x_count = 1
+                y_count = 0
+            
+                x_next = 1
+                y_next = 1
+            
+                x_offset = -1
+                y_offset = 1
+                
+                while random.random() < P_HL_CORR and cells_lost < cells_to_loose:
+                    ## do contiguous:
+                
+                    if x_count > 0:
+                        x_coord = (x_coord+x_offset)%ROWS
+                        x_count -= 1
+                
+                        if x_count == 0:
+                            x_next += 1
+                        if x_offset == 1:
+                            x_offset = -1
+                        elif x_offset == -1:
+                            x_offset = 1
+                
+                        y_count = y_next
+                    
+                    elif y_count > 0:                
+                        y_coord = (y_coord+y_offset)%COLUMNS
+                        y_count -= 1
+                
+                        if y_count == 0:
+                            y_next += 1
+                            if y_offset == 1:
+                                y_offset = -1
+                            elif y_offset == -1:
+                                y_offset = 1
+                    
+                            x_count = x_next
+            
+                    self.world[x_coord][y_coord].habitat = lost_habitat
+                    self.world[x_coord][y_coord].inhabitant = None
+                self.world[x_coord][y_coord].visitor = None
+                cells_lost += 1
 		    
 
 #the following piece of codes displays a figure showing what happens to the ecosystem
@@ -701,7 +701,7 @@ class Ecosystem():
         producer = False
         if self.net.in_degree(current_indiv.species_id) == 0:
             if visitor:
-                print 'there is a producer in a visitor spot'
+                print ('there is a producer in a visitor spot')
             producer = True
         
         if current_indiv.live(producer) == False:
@@ -778,7 +778,7 @@ class Ecosystem():
             if self.rnd.random() < REPRODUCTION_RATE:
                 if new_cell.inhabitant == None:
                     if current_indiv.mutualist:
-                        print 'I am a mutualist auto reproducing'
+                        print ('I am a mutualist auto reproducing')
                     new_cell.inhabitant = Individual(current_indiv.species_id)
                     self.new_inds_reproduction[current_indiv.species_id] += 1
                 elif new_cell.visitor == None and self.species_scl[new_cell.inhabitant.species_id] > 0:
@@ -902,7 +902,7 @@ class Ecosystem():
                 elif (current_indiv.species_id, second_indiv.species_id) in self.net.edges():
                     
                     if self.net.in_degree(current_indiv.species_id) == 0 and self.species_scl[second_indiv.species_id] > 1:
-                        print 'omnivore predator eating without paying omnivore penalty'
+                        print ('omnivore predator eating without paying omnivore penalty')
                         
                     
                     if self.rnd.random() < CAPTURE_PROB:
@@ -1019,20 +1019,20 @@ class Ecosystem():
             producers = set()
             for n in self.net.nodes():
                 if self.net.in_degree(n) == 0:
-                    current_r = self.net.node[n]['r']
+                    current_r = self.net.nodes[n]['r']
                     habitats_no = 1
                     for i in range(len(self.habitats_dist)):
                         if current_r >= self.habitats_dist[i] and current_r <= self.habitats_dist[i+1]:
                             break
                         habitats_no += 1
                     
-                    self.net.node[n]['habitats'] = set()
+                    self.net.nodes[n]['habitats'] = set()
                     if habitats_no == 1:
-                        self.net.node[n]['habitats'].add(self.rnd.choice(self.habitats))
+                        self.net.nodes[n]['habitats'].add(self.rnd.choice(self.habitats))
                     else:    
                         self.rnd.shuffle(self.habitats)
                         for i in range(habitats_no):
-                            self.net.node[n]['habitats'].add(self.habitats[i])
+                            self.net.nodes[n]['habitats'].add(self.habitats[i])
         
                     producers.add(n)
             
@@ -1040,23 +1040,23 @@ class Ecosystem():
             nodes = set(self.net.nodes())
             nodes -= producers
             
-            nodes_sorted = sorted(nodes, self.compare_nodes_niches)
+            nodes_sorted = sorted(nodes, key=functools.cmp_to_key(self.compare_nodes_niches))
             for n in nodes_sorted:
-                if not self.net.node[n].has_key('habitats'):
+                if 'habitats' not in self.net.nodes[n]:
                     self._assign_node_habitats(n)
             
          
     def _assign_node_habitats(self, n):
-        self.net.node[n]['habitats'] = set()
-        predecessors = sorted(self.net.predecessors(n), self.compare_nodes_niches)
+        self.net.nodes[n]['habitats'] = set()
+        predecessors = sorted(self.net.predecessors(n), key=functools.cmp_to_key(self.compare_nodes_niches))
         for pre in predecessors:
             if n == pre:
                 continue
             
-            if not self.net.node[pre].has_key('habitats'):
+            if 'habitats' not in self.net.nodes[pre]:
                 self._assign_node_habitats(pre)
 
-            self.net.node[n]['habitats'] |= self.net.node[pre]['habitats']
+            self.net.nodes[n]['habitats'] |= self.net.nodes[pre]['habitats']
     
     
     def _update_realised_network(self, prey, predator):
@@ -1098,8 +1098,8 @@ class Ecosystem():
                                 positions[cell.inhabitant.species_id] = [(i,j)]
                         
                     except:
-                        print 'inhabitant in cell ' + str(i) + ',' + str(j) + ' declared None but is:'
-                        print type(cell.inhabitant)                    
+                        print ('inhabitant in cell ' + str(i) + ',' + str(j) + ' declared None but is:')
+                        print (type(cell.inhabitant))
                 if cell.visitor is not None and type(cell.visitor) is not types.NoneType:                    
                     try:
                         self.populations[cell.visitor.species_id] += 1
@@ -1110,8 +1110,8 @@ class Ecosystem():
                             else:
                                 positions[cell.visitor.species_id] = [(i,j)]
                     except:
-                        print 'visitor in cell ' + str(i) + ',' + str(j) + ' declared None but is:'
-                        print type(cell.visitor)      
+                        print ('visitor in cell ' + str(i) + ',' + str(j) + ' declared None but is:')
+                        print (type(cell.visitor))
         
         if spatial:
             for s in self.species:         
@@ -1134,13 +1134,13 @@ class Ecosystem():
         return self.populations
     
     def compare_nodes_niches(self, a, b):
-        n_a = self.net.node[a]['n'] 
-        min_range_a = self.net.node[a]['c'] - (self.net.node[a]['r']/2)
-        max_range_a = self.net.node[a]['c'] + (self.net.node[a]['r']/2)
+        n_a = self.net.nodes[a]['n'] 
+        min_range_a = self.net.nodes[a]['c'] - (self.net.nodes[a]['r']/2)
+        max_range_a = self.net.nodes[a]['c'] + (self.net.nodes[a]['r']/2)
         
-        n_b = self.net.node[b]['n']
-        min_range_b = self.net.node[b]['c'] - (self.net.node[b]['r']/2)
-        max_range_b = self.net.node[b]['c'] + (self.net.node[b]['r']/2)
+        n_b = self.net.nodes[b]['n']
+        min_range_b = self.net.nodes[b]['c'] - (self.net.nodes[b]['r']/2)
+        max_range_b = self.net.nodes[b]['c'] + (self.net.nodes[b]['r']/2)
         
         
         if n_a >= min_range_b and n_a <= max_range_b and n_b >= min_range_a and n_b <= max_range_a:
@@ -1171,16 +1171,16 @@ class Ecosystem():
             self.net.add_node(inv_id, attr_dict=invader)
             
             for i in self.net.nodes():
-                if self.net.node[i]['r'] == 0.0:
+                if self.net.nodes[i]['r'] == 0.0:
                     continue
                 
-                r_lower_bound = self.net.node[i]['c'] - (self.net.node[i]['r']/2)
-                r_upper_bound = self.net.node[i]['c'] + (self.net.node[i]['r']/2) 
+                r_lower_bound = self.net.nodes[i]['c'] - (self.net.nodes[i]['r']/2)
+                r_upper_bound = self.net.nodes[i]['c'] + (self.net.nodes[i]['r']/2) 
                 for j in self.net.nodes():
                     if i != inv_id and j != inv_id:
                         continue
                     
-                    if self.net.node[j]['n'] >= r_lower_bound and self.net.node[j]['n'] <= r_upper_bound:  
+                    if self.net.nodes[j]['n'] >= r_lower_bound and self.net.nodes[j]['n'] <= r_upper_bound:  
                         self.net.add_edge(j,i)
         
             
@@ -1206,14 +1206,14 @@ class Ecosystem():
             if not disconnected:
                 self._assign_node_habitats(inv_id)
                 for sp in self.net.successors(inv_id):
-                    self.net.node[sp]['habitats'] |= self.net.node[inv_id]['habitats']
+                    self.net.nodes[sp]['habitats'] |= self.net.nodes[inv_id]['habitats']
                 break
             
             self.net.remove_node(inv_id)
             seen += 1
             
         if seen == count:
-            print 'None of the possible invaders can invade this network due to lack of links'
+            print ('None of the possible invaders can invade this network due to lack of links')
             return
         
         invaders_count = 0
@@ -1222,7 +1222,7 @@ class Ecosystem():
             inv_x, inv_y = self._get_random_empty_cell(self.net.node[inv_id]['habitats'])
             
             if inv_x == -1 and inv_y == -1:
-                print 'no empty cell found'
+                print ('no empty cell found')
                 continue
             else:
                 self.world[inv_x][inv_y].inhabitant = individual
@@ -1231,9 +1231,9 @@ class Ecosystem():
         
         if invaders_count > 0: 
             self.species_scl = self.net.get_trophic_levels()
-            print 'ecosystem invaded', invaders_count, 'individuals'
+            print ('ecosystem invaded', invaders_count, 'individuals')
         else:
-            print 'There are no empty cells for this species to invade the ecosystem' 
+            print ('There are no empty cells for this species to invade the ecosystem')
         
     
     def _get_random_empty_cell(self, habitats):
@@ -1460,7 +1460,7 @@ class Ecosystem():
         for i in range(number_of_extinctions):
             self.species_removed.append(candidates[i])
     
-        print 'candidates', candidates, 'species to remove', self.species_removed
+        print ('candidates', candidates, 'species to remove', self.species_removed)
     
         for i in range(ROWS):
             for j in range(COLUMNS):
@@ -1619,14 +1619,14 @@ class Ecosystem():
                 species_autocorr[s]['density'] = self.populations[s] / species_autocorr[s]['area']
             
                     
-        print 'finished calculating spatial correlation'
+        print ('finished calculating spatial correlation')
         
         return species_autocorr
 
     def calculate_spatial_state(self):
 
-	inhabitant_matrix = np.zeros((ROWS, COLUMNS))
-	visitor_matrix    = np.zeros((ROWS, COLUMNS))
+        inhabitant_matrix = np.zeros((ROWS, COLUMNS))
+        visitor_matrix    = np.zeros((ROWS, COLUMNS))
 
         for i in range(ROWS):
             for j in range(COLUMNS):
@@ -1642,10 +1642,10 @@ class Ecosystem():
                 else:
                     visitor = -1
 
-		inhabitant_matrix[i,j] = inhabitant
-		visitor_matrix[i,j] = visitor
+        inhabitant_matrix[i,j] = inhabitant
+        visitor_matrix[i,j] = visitor
 
-	return (inhabitant_matrix, visitor_matrix)
+        return (inhabitant_matrix, visitor_matrix)
 
 
 class Cell():

@@ -49,7 +49,7 @@ if __name__ == '__main__':
     job = '1' ##os.environ['JOB_ID'];
     task = '1' ##os.environ['SGE_TASK_ID']; 
     
-    output_dir = './' + job + '_' + task;
+    output_dir = './' + job + '_' + task
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -91,7 +91,7 @@ if __name__ == '__main__':
         graph = nx.read_graphml(network_file)
         net = Network(graph)
         
-        print 'connectance = ', net.connectance()
+        print ('connectance = ', net.connectance())
         
         tls = net.get_trophic_levels()
         
@@ -101,7 +101,7 @@ if __name__ == '__main__':
             if u in basal_sps and v in top_preds and tls[v] == 3:
                 net.remove_edge(u,v)
                 
-        print 'new connectance = ', net.connectance()
+        print ('new connectance = ', net.connectance())
     else:
         net = obtain_interactions_network()
         net_to_save = net.copy()
@@ -113,50 +113,6 @@ if __name__ == '__main__':
     
     out_row = get_out_row(0, net, '', 0, '','')
     out.writerow(out_row)
-    
-#    iteration_to_reset = (int) (math.ceil(ITERATIONS*NETWORK_RESET))
-    
-    out_row_eco = get_eco_state_row(0, ecosystem)
-    out_eco.writerow(out_row_eco)
-    
-#    print ecosystem.get_groups_counts()   
-#    plot_series = []
-#    plot_prods = []
-#    plot_mut_prods = []
-#    plot_herbs = []
-#    plot_muts = []
-#    plot_prim = []
-#    plot_sec = []
-#    
-#    plot_prods_rep = []
-#    plot_mut_prods_rep = []
-#    plot_herbs_rep = []
-#    plot_muts_rep = []
-#    plot_prim_rep = []
-#    plot_sec_rep = []
-#    
-#    plot_prods_inmig = []
-#    plot_mut_prods_inmig = []
-#    plot_herbs_inmig = []
-#    plot_muts_inmig = []
-#    plot_prim_inmig = []
-#    plot_sec_inmig = []
-#    
-#    plot_prods_dead = []
-#    plot_mut_prods_dead = []
-#    plot_herbs_dead = []
-#    plot_muts_dead = []
-#    plot_prim_dead = []
-#    plot_sec_dead = []
-#    
-#    fig = figure(figsize=(27,12))
-#    plot = fig.add_subplot(212)
-#    plot_rep = fig.add_subplot(231)
-#    plot_inmig = fig.add_subplot(232)
-#    plot_dead = fig.add_subplot(233)
-#    
-#    populations_historical_before = dict()
-#    populations_historical_after = dict()
     
     network_stats_lock = Lock()
     ecosystem_stats_lock = Lock()
@@ -178,7 +134,7 @@ if __name__ == '__main__':
     threshold_iter = math.ceil(ITERATIONS - (ITERATIONS*ITERATIONS_TO_RECORD))
     
     for i in range(1, ITERATIONS+1):
-        print i
+        print(i)
         ecosystem.update_world()
         #ecosystem.draw_species_distribution()
         
@@ -189,122 +145,13 @@ if __name__ == '__main__':
                 sp_stats['immigrants'] += ecosystem.new_inds_inmigration[sp]
                 sp_stats['born'] += ecosystem.new_inds_reproduction[sp]
                 sp_stats['dead'] += ecosystem.dead_individuals[sp] 
-                    
-                    
-#        if i%REFRESH_RATE == 0 and i>3:
-#            ecosystem.draw_species_distribution()
-#            gc = ecosystem.get_groups_counts()
-#            if i == EXTINCTION_EVENT:
-#                removed = ecosystem.extinguish_species(REMOVAL_LEVEL, REMOVAL_FRACTION)
-#            
-#            if i >= (EXTINCTION_EVENT - TIME_WINDOW) and i <= EXTINCTION_EVENT:
-#                populations_historical_before[i] = ecosystem.populations
-#            
-#            if i > EXTINCTION_EVENT and i <= (EXTINCTION_EVENT + TIME_WINDOW):
-#                populations_historical_after[i] = ecosystem.populations
-#            
-#            if i == (EXTINCTION_EVENT + TIME_WINDOW):
-#                calculate_stability_measures(populations_historical_before, populations_historical_after, ecosystem.species_scl, mutualistic_producers)
-#            
-#            plot_series.append(i)
-#            a,b = gc['prods']
-#            plot_prods.append(b)
-#            
-#            a,b = gc['prods_new']
-#            plot_prods_rep.append(a)
-#            plot_prods_inmig.append(b)
-#            
-#            a = gc['prods_dead']
-#            plot_prods_dead.append(a)
-#            
-#            a,b = gc['mut_prods']
-#            plot_mut_prods.append(b)
-#            
-#            a,b = gc['mut_prods_new']
-#            plot_mut_prods_rep.append(a)
-#            plot_mut_prods_inmig.append(b)
-#            
-#            a = gc['mut_prods_dead']
-#            plot_mut_prods_dead.append(a)
-#            
-#            a,b = gc['herbs']
-#            plot_herbs.append(b)
-#            
-#            a,b = gc['herbs_new']
-#            plot_herbs_rep.append(a)
-#            plot_herbs_inmig.append(b)
-#            
-#            a = gc['herbs_dead']
-#            plot_herbs_dead.append(a)
-#            
-#            a,b = gc['muts']
-#            plot_muts.append(b)
-#            
-#            a,b = gc['muts_new']
-#            plot_muts_rep.append(a)
-#            plot_muts_inmig.append(b)
-#            
-#            a = gc['muts_dead']
-#            plot_muts_dead.append(a)
-#            
-#            a,b = gc['prim_preds']
-#            plot_prim.append(b)
-#            
-#            a,b = gc['prim_preds_new']
-#            plot_prim_rep.append(a)
-#            plot_prim_inmig.append(b)
-#            
-#            a = gc['prim_preds_dead']
-#            plot_prim_dead.append(a)
-#            
-#            a,b = gc['second_preds']
-#            plot_sec.append(b)
-#            
-#            a,b = gc['second_preds_new']
-#            plot_sec_rep.append(a)
-#            plot_sec_inmig.append(b)
-#            
-#            a = gc['second_preds_dead']
-#            plot_sec_dead.append(a)
-#            
-#            plot_populations_series(plot, plot_series, plot_prods, plot_mut_prods, plot_herbs, plot_muts, plot_prim, plot_sec, title='populations')
-##            draw()
-#            plot_populations_series(plot_rep, plot_series, plot_prods_rep, plot_mut_prods_rep, plot_herbs_rep, plot_muts_rep, plot_prim_rep, plot_sec_rep, title='reproduction')
-##            draw()
-#            plot_populations_series(plot_inmig, plot_series, plot_prods_inmig, plot_mut_prods_inmig, plot_herbs_inmig, plot_muts_inmig, plot_prim_inmig, plot_sec_inmig, title='inmigration')
-#            
-#            plot_populations_series(plot_dead, plot_series, plot_prods_dead, plot_mut_prods_dead, plot_herbs_dead, plot_muts_dead, plot_prim_dead, plot_sec_dead, title='death')
-#            
-#            draw()
             
         if HABITAT_LOSS and i == HABITAT_LOSS_ITER:
             net_temp = ecosystem.realised_net.copy()
-#            layout_temp = nx.circular_layout(net_temp)
-#            
-#            fig_temp = figure()
-#            network_p_temp = fig_temp.add_subplot(111)
-#            nx.draw_networkx(net_temp, layout_temp, ax=network_p_temp)
-#    
-#            print 'S realised =', net_temp.order(), 'L realised =', net_temp.size(), 'C realised =', net_temp.connectance()
-#            
+       
             ecosystem.clear_realised_network()
             
-            #out_row = get_out_row(i, net_temp)
-            #out.writerow(out_row)
-            
             ecosystem.apply_habitat_loss()
-            
-            #ecosystem.draw_species_distribution()
-#        
-#        if INVASION and i == INVASION_ITER:
-#            net_temp = ecosystem.realised_net.copy()
-#            ecosystem.invade(invaders)
-#            
-#            out_row = get_out_row(i, net_temp)
-#            out.writerow(out_row)
-#    
-#        if i == (ITERATIONS - iteration_to_reset):
-#            ecosystem.clear_realised_network()
             
         eco_temp = copy(ecosystem)
         if SPATIAL_VARIATION:
@@ -338,23 +185,22 @@ if __name__ == '__main__':
             thread.start()
             ecosystem.clear_realised_network()
     
-
         ##calculate spatial variation metrics
-	## and save spatial state of system (for further spatial analysis after simulation)
-        if SPATIAL_VARIATION and (i%RECORD_SPATIAL_VAR == 0 or i == ITERATIONS):
+	    ## and save spatial state of system (for further spatial analysis after simulation)
+        if SPATIAL_VARIATION and (i % RECORD_SPATIAL_VAR == 0 or i == ITERATIONS):
             start = datetime.now()
             write_spatial_analysis(ecosystem, i)
-	    write_spatial_state(ecosystem,i)
-            stop = datetime.now()
-            elapsed = stop-start
-            print elapsed
+
+        write_spatial_state(ecosystem, i)
+        stop = datetime.now()
+        elapsed = stop-start
+        print (elapsed)
 
     for t in threads:
         t.join()
 
     file_net.close()
     file_eco.close()
-    
     
     # here we write the output file for the species populations dynamics
     header_names = ['iteration']
@@ -456,30 +302,10 @@ if __name__ == '__main__':
     
     stop_sim = datetime.now()
     elapsed_sim = stop_sim-start_sim
-    print 'time for simulation' , elapsed_sim
+    print ('time for simulation' , elapsed_sim)
     
-    
-    #ecosystem.draw_species_distribution()
-    
-    #layout = nx.graphviz_layout(net, prog='dot', args='-Gnodesep=.07, -Granksep=.1, -Grankdir=BT')
-    layout = nx.circular_layout(net)
-            
-    #fig = figure()
-    #network_plot = fig.add_subplot(111)
-    #nx.draw_networkx(net, layout, ax=network_plot)
-    
-    print 'S original =', net.order(), 'L original =', net.size(), 'C original =', net.connectance()
-#    
-#    net_final = ecosystem.realised_net.copy()
-#    layout2 = nx.circular_layout(net_final)
-#            
-#    fig2 = figure()
-#    network_plot2 = fig2.add_subplot(111)
-#    nx.draw_networkx(net_final, layout2, ax=network_plot2)
-#    
-#    print 'S realised =', net_final.order(), 'L realised =', net_final.size(), 'C realised =', net_final.connectance()
+    print ('S original =', net.order(), 'L original =', net.size(), 'C original =', net.connectance())
 
-    #show()
     
     
     

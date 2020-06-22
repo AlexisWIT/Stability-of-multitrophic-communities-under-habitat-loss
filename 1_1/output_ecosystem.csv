@@ -1,0 +1,1 @@
+iteration,total_sp,total_count,prod_sp,prod_count,mut_prod_sp,mut_prod_count,herb_sp,herb_count,mut_sp,mut_count,prim_pred_sp,prim_pred_count,sec_pred_sp,sec_pred_count,shannon_index,shannon_eq,shannon_index_prods,shannon_eq_prods,shannon_index_herbs,shannon_eq_herbs,shannon_index_interm,shannon_eq_interm,shannon_index_top,shannon_eq_top

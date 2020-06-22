@@ -79,8 +79,8 @@ def get_mutualistic_matrix_from_network(net):
         mutualistic_matrix.append(row);
         weighted_matrix.append(weighted_row);
     
-    print 'hosts :', hosts
-    print 'muts: ', muts
+    print ('hosts :', hosts)
+    print ('muts: ', muts)
     
     return mutualistic_matrix, weighted_matrix, hosts, muts
 
@@ -140,7 +140,7 @@ def order_mutualistic_matrix(matrix, prods, herbs):
         for j in range(rows):
             temp_matrix[j][i] = col[j]
         
-    print 'plants: ', producers_order
+    print ('plants: ', producers_order)
     
     dict_rows = dict()
     for idx in range(len(herbs)):
@@ -155,7 +155,7 @@ def order_mutualistic_matrix(matrix, prods, herbs):
         matrix.append(row)
         ordered_herbs.append(idx)
     
-    print 'animals: ',ordered_herbs
+    print ('animals: ', ordered_herbs)
     
     return matrix, producers_order, ordered_herbs
 
@@ -232,14 +232,14 @@ def calculate_nodf(matrix):
     paired_nested_degrees_rows = []
     #we first calculate the pairing indexes row-wise
     for i in range(rows):
-        row_i = matrix[i];
-        visited = False;
-        mt_i = 0;
+        row_i = matrix[i]
+        visited = False
+        mt_i = 0
         for j in range(i+1, rows):
-            row_j = matrix[j];
-            mt_j = 0;
-            ones_i = 0;
-            n_pair_ij = 0.0;
+            row_j = matrix[j]
+            mt_j = 0
+            ones_i = 0
+            n_pair_ij = 0.0
             
             for k in range(len(row_i)):
                 if not visited:
@@ -247,19 +247,19 @@ def calculate_nodf(matrix):
                 mt_j += row_j[k];                    
                 if row_j[k] == 1 and row_i[k] == 1:
                     ones_i += 1
-            visited = True;
+            visited = True
             
             if mt_i > mt_j and mt_j > 0:
                 n_pair_ij = float(ones_i)/float(mt_j)
             
-            n_pair_row += n_pair_ij;
+            n_pair_row += n_pair_ij
             paired_nested_degrees_rows.append(n_pair_ij);    
      
     #we now proceed to calculate the pairing indexes column-wise
     paired_nested_degrees_cols = []
     for k in range(cols):
         colk = []
-        mt_k = 0;
+        mt_k = 0
         for i in range(rows):
             colk.append(matrix[i][k])
             mt_k += colk[i]
@@ -267,7 +267,7 @@ def calculate_nodf(matrix):
         for l in range(k+1,cols):
             mt_l = 0
             ones_k = 0
-            n_pair_kl = 0.0;
+            n_pair_kl = 0.0
             
             for i in range(rows):
                 pos = matrix[i][l]
@@ -276,12 +276,12 @@ def calculate_nodf(matrix):
                     ones_k += 1
             
             if mt_k > mt_l and mt_l > 0:
-                n_pair_kl = float(ones_k)/float(mt_l);
+                n_pair_kl = float(ones_k)/float(mt_l)
             
-            n_pair_col += n_pair_kl;
-            paired_nested_degrees_cols.append(n_pair_kl);
+            n_pair_col += n_pair_kl
+            paired_nested_degrees_cols.append(n_pair_kl)
     
-    nodf = (n_pair_row + n_pair_col)*100/(np_row + np_col);
+    nodf = (n_pair_row + n_pair_col)*100/(np_row + np_col)
     
     #print 'NODF = ', nodf,' n_pair_row = ',(float((n_pair_row/len(paired_nested_degrees_rows))*100)),' n_pair_col = ', (float((n_pair_col/len(paired_nested_degrees_cols))*100))
     
@@ -333,13 +333,13 @@ def get_out_row(iteration, net, series_counts, offset, centroids, areas):
     ### we look only at the stability in terms of individuals per species since it does not make much sense
     ### to look at changes in overall numbers of individuals since it is not biomass (we cannot obtain biomass change)
     if series_counts == '' or offset == 0:
-        out_row['stable'] = '';
-        out_row['mean_cv'] = '';
+        out_row['stable'] = ''
+        out_row['mean_cv'] = ''
         
-        out_row['spatially_stable'] = '';
-        out_row['mean_cv_centroid'] = '';
-        out_row['mean_cv_area'] = '';
-        out_row['mean_cv_density'] = '';
+        out_row['spatially_stable'] = ''
+        out_row['mean_cv_centroid'] = ''
+        out_row['mean_cv_area'] = ''
+        out_row['mean_cv_density'] = ''
     else:
         start = iteration - offset + 1
         stop = iteration
@@ -351,10 +351,10 @@ def get_out_row(iteration, net, series_counts, offset, centroids, areas):
             cvs_areas = []
             cvs_densities = []
         else:
-            out_row['spatially_stable'] = '';
-            out_row['mean_cv_centroid'] = '';
-            out_row['mean_cv_area'] = '';
-            out_row['mean_cv_density'] = '';
+            out_row['spatially_stable'] = ''
+            out_row['mean_cv_centroid'] = ''
+            out_row['mean_cv_area'] = ''
+            out_row['mean_cv_density'] = ''
             
         for sp in net.nodes():
             current_sps = []
@@ -366,141 +366,141 @@ def get_out_row(iteration, net, series_counts, offset, centroids, areas):
                 current_dens = []
             
             for iterat in range(start,stop):
-                current_sps.append(series_counts[iterat][sp]);
+                current_sps.append(series_counts[iterat][sp])
                 
                 if space and centroids.has_key(iterat):
-                    current_cents.append(centroids[iterat][sp]);
-                    current_ars.append(areas[iterat][sp]);
-                    current_sps_sp.append(series_counts[iterat][sp]);
+                    current_cents.append(centroids[iterat][sp])
+                    current_ars.append(areas[iterat][sp])
+                    current_sps_sp.append(series_counts[iterat][sp])
                 
                 
-            mean = numpy.mean(current_sps);
-            sd = numpy.std(current_sps);
+            mean = numpy.mean(current_sps)
+            sd = numpy.std(current_sps)
         
-            cvs.append(sd/mean);
+            cvs.append(sd/mean)
             
             if space:
                 current_dens = numpy.array(current_sps_sp)/numpy.array(current_ars)
                 current_cents = numpy.array(current_cents)
                 
-                mean_area = numpy.mean(current_ars);
-                sd_area = numpy.std(current_ars);
-                cvs_areas.append(sd_area/mean_area);
+                mean_area = numpy.mean(current_ars)
+                sd_area = numpy.std(current_ars)
+                cvs_areas.append(sd_area/mean_area)
                 
-                mean_dens = numpy.mean(current_dens);
-                sd_dens = numpy.std(current_dens);
-                cvs_densities.append(sd_dens/mean_dens);
+                mean_dens = numpy.mean(current_dens)
+                sd_dens = numpy.std(current_dens)
+                cvs_densities.append(sd_dens/mean_dens)
                 
-                mean_cents = numpy.mean(current_cents, axis=0);
-                sd_cents = numpy.std(current_cents, axis=0);
-                cvs_centroids.append(sd_cents/mean_cents);
+                mean_cents = numpy.mean(current_cents, axis=0)
+                sd_cents = numpy.std(current_cents, axis=0)
+                cvs_centroids.append(sd_cents/mean_cents)
             
             
-        mean_cv = numpy.mean(cvs);
+        mean_cv = numpy.mean(cvs)
         if mean_cv <= 0.1:
-            out_row['stable'] = True;
+            out_row['stable'] = True
         else:
-            out_row['stable'] = False;
+            out_row['stable'] = False
         
-        out_row['mean_cv'] = mean_cv;
+        out_row['mean_cv'] = mean_cv
     
         if space:
-            mean_cv_area = numpy.mean(cvs_areas);
-            mean_cv_density = numpy.mean(cvs_densities);
-            mean_cv_centroids = numpy.mean(numpy.array(cvs_centroids), axis=0);
+            mean_cv_area = numpy.mean(cvs_areas)
+            mean_cv_density = numpy.mean(cvs_densities)
+            mean_cv_centroids = numpy.mean(numpy.array(cvs_centroids), axis=0)
             
-            out_row['mean_cv_area'] = mean_cv_area;
-            out_row['mean_cv_density'] = mean_cv_density;
-            out_row['mean_cv_centroid'] = mean_cv_centroids;
+            out_row['mean_cv_area'] = mean_cv_area
+            out_row['mean_cv_density'] = mean_cv_density
+            out_row['mean_cv_centroid'] = mean_cv_centroids
             
         if mean_cv_area <= 0.1 and mean_cv_density <= 0.1 and mean_cv_centroids[0] <= 0.1 and mean_cv_centroids[1] <= 0.1:
-            out_row['spatially_stable'] = True;
+            out_row['spatially_stable'] = True
         else:
-            out_row['spatially_stable'] = False;
+            out_row['spatially_stable'] = False
         
     ####   mutualistic measures
     
     #### nestedness (using NODF algorithm)
-    mutualistic_matrix, weighted_matrix, prods, muts = get_mutualistic_matrix_from_network(net);
+    mutualistic_matrix, weighted_matrix, prods, muts = get_mutualistic_matrix_from_network(net)
     
     if len(mutualistic_matrix) == 0:
-        out_row['nodf'] = '';
+        out_row['nodf'] = ''
     else:
-        ordered_matrix, prods, muts = sort_mutualistic_matrix(mutualistic_matrix, prods, muts);
-        nodf = calculate_nodf(ordered_matrix);
-        out_row['nodf'] = nodf;
+        ordered_matrix, prods, muts = sort_mutualistic_matrix(mutualistic_matrix, prods, muts)
+        nodf = calculate_nodf(ordered_matrix)
+        out_row['nodf'] = nodf
     
     #### H2 measure (after Bluthgen et al. 2006)
-    weighted_matrix = numpy.matrix(weighted_matrix);
-    weight_sum = float(numpy.sum(weighted_matrix));
+    weighted_matrix = numpy.matrix(weighted_matrix)
+    weight_sum = float(numpy.sum(weighted_matrix))
     
     if weight_sum == 0.0:
-        out_row['h2'] = '';
+        out_row['h2'] = ''
     else:
-        weighted_matrix = (weighted_matrix)/weight_sum;
+        weighted_matrix = (weighted_matrix)/weight_sum
         
         ### this is for applying the log function only to non-zero elements
         ### the coo scipy matrix contains the matrix of log-transformed weighted elements
-        coo = coo_matrix(weighted_matrix);
-        coo.data = numpy.log(coo.data);
+        coo = coo_matrix(weighted_matrix)
+        coo.data = numpy.log(coo.data)
         
-        multi = numpy.multiply(weighted_matrix, coo.todense());
+        multi = numpy.multiply(weighted_matrix, coo.todense())
         
-        sum_h = numpy.sum(multi);    
-        out_row['h2'] = -sum_h;
+        sum_h = numpy.sum(multi)
+        out_row['h2'] = -sum_h
     
     ####   quantitative measures
     
     # ts, bs, ints are the top, basal and intermediate species respectively
     if( (len(ts) + len(ints)) == 0 ):
-        out_row['G_qi'] = '';
+        out_row['G_qi'] = ''
     else:
-        out_row['G_qi'] = net.size()/float(len(ts) + len(ints));
+        out_row['G_qi'] = net.size()/float(len(ts) + len(ints))
     
     if( (len(bs) + len(ints)) == 0 ):
-        out_row['V_qi'] = '';
+        out_row['V_qi'] = ''
     else:
-        out_row['V_qi'] = net.size()/float(len(bs) + len(ints));
+        out_row['V_qi'] = net.size()/float(len(bs) + len(ints))
     
     if( net.size() == 0 ):
-        out_row['G_q'] = '';
-        out_row['V_q'] = '';
+        out_row['G_q'] = ''
+        out_row['V_q'] = ''
     else:
-        (a,b,w) = net.edges(data=True)[0];
+        (a,b,w) = net.edges(data=True)[0]
         if not 'is' in w:
-            out_row['G_q'] = '';
-            out_row['V_q'] = '';    
+            out_row['G_q'] = ''
+            out_row['V_q'] = ''  
         else:
-            total_biomass_flux = 0;
+            total_biomass_flux = 0
             for (v, u, atts) in net.edges(data=True):
                 if 'is' in atts:
-                    total_biomass_flux += atts['is'];
+                    total_biomass_flux += atts['is']
             
-            g_q_val = 0.0;
-            v_q_val = 0.0;
+            g_q_val = 0.0
+            v_q_val = 0.0
             
-            print total_biomass_flux;
+            print (total_biomass_flux)
             
             for n in net.nodes():
-                prey = net.predecessors(n);
-                predators = net.successors(n);
+                prey = net.predecessors(n)
+                predators = net.successors(n)
                 
-                b_coming = 0;
+                b_coming = 0
                 for p in prey:
                     if 'is' in net[p][n]:
-                        b_coming += net[p][n]['is']; 
+                        b_coming += net[p][n]['is']
                 
-                g_q_val += (b_coming/float(total_biomass_flux)) * len(prey); 
+                g_q_val += (b_coming/float(total_biomass_flux)) * len(prey)
                 
-                b_going = 0;
+                b_going = 0
                 for p in predators:
                     if 'is' in net[n][p]:
-                        b_going += net[n][p]['is'];
+                        b_going += net[n][p]['is']
                 
-                v_q_val += (b_going/float(total_biomass_flux)) * len(predators);
+                v_q_val += (b_going/float(total_biomass_flux)) * len(predators)
             
-            out_row['G_q'] = g_q_val;
-            out_row['V_q'] = v_q_val;
+            out_row['G_q'] = g_q_val
+            out_row['V_q'] = v_q_val
         
     return out_row
     
@@ -670,11 +670,11 @@ def calculate_stability_measures(before, after, tls, mut_prod):
     
     
     extinctions = species_before - species_after
-    print 'extinctions =', extinctions
+    print ('extinctions =', extinctions)
     for sp in extinctions:
-        print sp, ':', tls[sp]
+        print (sp, ':', tls[sp])
     
-    print temp_var_before, temp_var_after #, temp_var_prod_before, temp_var_prod_after #, temp_var_mut_before, temp_var_mut_after
+    print (temp_var_before, temp_var_after) #, temp_var_prod_before, temp_var_prod_after #, temp_var_mut_before, temp_var_mut_after
 
 
 def write_adjacency_matrix(iteration, offset, series_counts, net, output_dir):  
